@@ -10,6 +10,8 @@ using Assignment3.Models;
 
 namespace Assignment3.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     public class OrderProductController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -19,152 +21,86 @@ namespace Assignment3.Controllers
             _context = context;
         }
 
-        // GET: OrderProduct
-        public async Task<IActionResult> Index()
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<OrderProduct>>> GetOrderProducts()
         {
-            var applicationDbContext = _context.OrderProducts.Include(o => o.Order).Include(o => o.Product);
-            return View(await applicationDbContext.ToListAsync());
+            return await _context.OrderProducts.Include(op => op.Order).Include(op => op.Product).ToListAsync();
         }
 
-        // GET: OrderProduct/Details/5
-        public async Task<IActionResult> Details(int? id)
+        [HttpGet("{orderId}/{productId}")]
+        public async Task<ActionResult<OrderProduct>> GetOrderProduct(int orderId, int productId)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
             var orderProduct = await _context.OrderProducts
-                .Include(o => o.Order)
-                .Include(o => o.Product)
-                .FirstOrDefaultAsync(m => m.OrderId == id);
+                .Include(op => op.Order)
+                .Include(op => op.Product)
+                .FirstOrDefaultAsync(op => op.OrderId == orderId && op.ProductId == productId);
+
             if (orderProduct == null)
             {
                 return NotFound();
             }
 
-            return View(orderProduct);
+            return orderProduct;
         }
 
-        // GET: OrderProduct/Create
-        public IActionResult Create()
-        {
-            ViewData["OrderId"] = new SelectList(_context.Orders, "Id", "Id");
-            ViewData["ProductId"] = new SelectList(_context.Products, "Id", "Id");
-            return View();
-        }
-
-        // POST: OrderProduct/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("OrderId,ProductId,Quantity")] OrderProduct orderProduct)
+        public async Task<ActionResult<OrderProduct>> PostOrderProduct(OrderProduct orderProduct)
         {
-            if (ModelState.IsValid)
-            {
-                _context.Add(orderProduct);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["OrderId"] = new SelectList(_context.Orders, "Id", "Id", orderProduct.OrderId);
-            ViewData["ProductId"] = new SelectList(_context.Products, "Id", "Id", orderProduct.ProductId);
-            return View(orderProduct);
-        }
-
-        // GET: OrderProduct/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var orderProduct = await _context.OrderProducts.FindAsync(id);
-            if (orderProduct == null)
-            {
-                return NotFound();
-            }
-            ViewData["OrderId"] = new SelectList(_context.Orders, "Id", "Id", orderProduct.OrderId);
-            ViewData["ProductId"] = new SelectList(_context.Products, "Id", "Id", orderProduct.ProductId);
-            return View(orderProduct);
-        }
-
-        // POST: OrderProduct/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("OrderId,ProductId,Quantity")] OrderProduct orderProduct)
-        {
-            if (id != orderProduct.OrderId)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(orderProduct);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!OrderProductExists(orderProduct.OrderId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["OrderId"] = new SelectList(_context.Orders, "Id", "Id", orderProduct.OrderId);
-            ViewData["ProductId"] = new SelectList(_context.Products, "Id", "Id", orderProduct.ProductId);
-            return View(orderProduct);
-        }
-
-        // GET: OrderProduct/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var orderProduct = await _context.OrderProducts
-                .Include(o => o.Order)
-                .Include(o => o.Product)
-                .FirstOrDefaultAsync(m => m.OrderId == id);
-            if (orderProduct == null)
-            {
-                return NotFound();
-            }
-
-            return View(orderProduct);
-        }
-
-        // POST: OrderProduct/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var orderProduct = await _context.OrderProducts.FindAsync(id);
-            if (orderProduct != null)
-            {
-                _context.OrderProducts.Remove(orderProduct);
-            }
-
+            _context.OrderProducts.Add(orderProduct);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+
+            return CreatedAtAction(nameof(GetOrderProduct), new { orderId = orderProduct.OrderId, productId = orderProduct.ProductId }, orderProduct);
         }
 
-        private bool OrderProductExists(int id)
+        [HttpPut("{orderId}/{productId}")]
+        public async Task<IActionResult> PutOrderProduct(int orderId, int productId, OrderProduct orderProduct)
         {
-            return _context.OrderProducts.Any(e => e.OrderId == id);
+            if (orderId != orderProduct.OrderId || productId != orderProduct.ProductId)
+            {
+                return BadRequest();
+            }
+
+            _context.Entry(orderProduct).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!OrderProductExists(orderId, productId))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        [HttpDelete("{orderId}/{productId}")]
+        public async Task<IActionResult> DeleteOrderProduct(int orderId, int productId)
+        {
+            var orderProduct = await _context.OrderProducts
+                .FirstOrDefaultAsync(op => op.OrderId == orderId && op.ProductId == productId);
+
+            if (orderProduct == null)
+            {
+                return NotFound();
+            }
+
+            _context.OrderProducts.Remove(orderProduct);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        private bool OrderProductExists(int orderId, int productId)
+        {
+            return _context.OrderProducts.Any(op => op.OrderId == orderId && op.ProductId == productId);
         }
     }
 }

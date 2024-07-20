@@ -10,6 +10,8 @@ using Assignment3.Models;
 
 namespace Assignment3.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     public class CartProductController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -19,152 +21,86 @@ namespace Assignment3.Controllers
             _context = context;
         }
 
-        // GET: CartProduct
-        public async Task<IActionResult> Index()
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<CartProduct>>> GetCartProducts()
         {
-            var applicationDbContext = _context.CartProducts.Include(c => c.Cart).Include(c => c.Product);
-            return View(await applicationDbContext.ToListAsync());
+            return await _context.CartProducts.Include(cp => cp.Cart).Include(cp => cp.Product).ToListAsync();
         }
 
-        // GET: CartProduct/Details/5
-        public async Task<IActionResult> Details(int? id)
+        [HttpGet("{cartId}/{productId}")]
+        public async Task<ActionResult<CartProduct>> GetCartProduct(int cartId, int productId)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
             var cartProduct = await _context.CartProducts
-                .Include(c => c.Cart)
-                .Include(c => c.Product)
-                .FirstOrDefaultAsync(m => m.CartId == id);
+                .Include(cp => cp.Cart)
+                .Include(cp => cp.Product)
+                .FirstOrDefaultAsync(cp => cp.CartId == cartId && cp.ProductId == productId);
+
             if (cartProduct == null)
             {
                 return NotFound();
             }
 
-            return View(cartProduct);
+            return cartProduct;
         }
 
-        // GET: CartProduct/Create
-        public IActionResult Create()
-        {
-            ViewData["CartId"] = new SelectList(_context.Carts, "Id", "Id");
-            ViewData["ProductId"] = new SelectList(_context.Products, "Id", "Id");
-            return View();
-        }
-
-        // POST: CartProduct/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("CartId,ProductId,Quantity")] CartProduct cartProduct)
+        public async Task<ActionResult<CartProduct>> PostCartProduct(CartProduct cartProduct)
         {
-            if (ModelState.IsValid)
-            {
-                _context.Add(cartProduct);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["CartId"] = new SelectList(_context.Carts, "Id", "Id", cartProduct.CartId);
-            ViewData["ProductId"] = new SelectList(_context.Products, "Id", "Id", cartProduct.ProductId);
-            return View(cartProduct);
-        }
-
-        // GET: CartProduct/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var cartProduct = await _context.CartProducts.FindAsync(id);
-            if (cartProduct == null)
-            {
-                return NotFound();
-            }
-            ViewData["CartId"] = new SelectList(_context.Carts, "Id", "Id", cartProduct.CartId);
-            ViewData["ProductId"] = new SelectList(_context.Products, "Id", "Id", cartProduct.ProductId);
-            return View(cartProduct);
-        }
-
-        // POST: CartProduct/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("CartId,ProductId,Quantity")] CartProduct cartProduct)
-        {
-            if (id != cartProduct.CartId)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(cartProduct);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!CartProductExists(cartProduct.CartId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["CartId"] = new SelectList(_context.Carts, "Id", "Id", cartProduct.CartId);
-            ViewData["ProductId"] = new SelectList(_context.Products, "Id", "Id", cartProduct.ProductId);
-            return View(cartProduct);
-        }
-
-        // GET: CartProduct/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var cartProduct = await _context.CartProducts
-                .Include(c => c.Cart)
-                .Include(c => c.Product)
-                .FirstOrDefaultAsync(m => m.CartId == id);
-            if (cartProduct == null)
-            {
-                return NotFound();
-            }
-
-            return View(cartProduct);
-        }
-
-        // POST: CartProduct/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var cartProduct = await _context.CartProducts.FindAsync(id);
-            if (cartProduct != null)
-            {
-                _context.CartProducts.Remove(cartProduct);
-            }
-
+            _context.CartProducts.Add(cartProduct);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+
+            return CreatedAtAction(nameof(GetCartProduct), new { cartId = cartProduct.CartId, productId = cartProduct.ProductId }, cartProduct);
         }
 
-        private bool CartProductExists(int id)
+        [HttpPut("{cartId}/{productId}")]
+        public async Task<IActionResult> PutCartProduct(int cartId, int productId, CartProduct cartProduct)
         {
-            return _context.CartProducts.Any(e => e.CartId == id);
+            if (cartId != cartProduct.CartId || productId != cartProduct.ProductId)
+            {
+                return BadRequest();
+            }
+
+            _context.Entry(cartProduct).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!CartProductExists(cartId, productId))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        [HttpDelete("{cartId}/{productId}")]
+        public async Task<IActionResult> DeleteCartProduct(int cartId, int productId)
+        {
+            var cartProduct = await _context.CartProducts
+                .FirstOrDefaultAsync(cp => cp.CartId == cartId && cp.ProductId == productId);
+
+            if (cartProduct == null)
+            {
+                return NotFound();
+            }
+
+            _context.CartProducts.Remove(cartProduct);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        private bool CartProductExists(int cartId, int productId)
+        {
+            return _context.CartProducts.Any(cp => cp.CartId == cartId && cp.ProductId == productId);
         }
     }
 }

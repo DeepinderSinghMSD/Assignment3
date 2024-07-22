@@ -21,12 +21,14 @@ namespace Assignment3.Controllers
             _context = context;
         }
 
+        // GET: api/Product
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
         {
-            return await _context.Products.ToListAsync();
+            return Ok(await _context.Products.ToListAsync());
         }
 
+        // GET: api/Product/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Product>> GetProduct(int id)
         {
@@ -37,47 +39,51 @@ namespace Assignment3.Controllers
                 return NotFound();
             }
 
-            return product;
+            return Ok(product);
         }
 
+        // POST: api/Product
         [HttpPost]
-        public async Task<ActionResult<Product>> PostProduct(Product product)
+        public async Task<ActionResult<Product>> CreateProduct(Product product)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
         }
 
+        // PUT: api/Product/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutProduct(int id, Product product)
+        public async Task<IActionResult> UpdateProduct(int id, [FromBody] Product product)
         {
-            if (id != product.Id)
+            if (!ModelState.IsValid)
             {
-                return BadRequest();
+                return BadRequest(ModelState);
             }
 
-            _context.Entry(product).State = EntityState.Modified;
+            var existingProduct = await _context.Products.FindAsync(id);
+            if (existingProduct == null)
+            {
+                return NotFound();
+            }
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ProductExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            existingProduct.Description = product.Description;
+            existingProduct.Image = product.Image;
+            existingProduct.Pricing = product.Pricing;
+            existingProduct.ShippingCost = product.ShippingCost;
+            existingProduct.Rating = product.Rating;
+
+            await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
+        // DELETE: api/Product/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(int id)
         {

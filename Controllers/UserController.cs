@@ -21,12 +21,14 @@ namespace Assignment3.Controllers
             _context = context;
         }
 
+        // GET: api/User
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
-            return await _context.Users.ToListAsync();
+            return Ok(await _context.Users.ToListAsync());
         }
 
+        // GET: api/User/5
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> GetUser(int id)
         {
@@ -37,24 +39,36 @@ namespace Assignment3.Controllers
                 return NotFound();
             }
 
-            return user;
+            return Ok(user);
         }
 
+        // POST: api/User
         [HttpPost]
-        public async Task<ActionResult<User>> PostUser(User user)
+        public async Task<ActionResult<User>> CreateUser(User user)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
         }
 
+        // PUT: api/User/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(int id, User user)
+        public async Task<IActionResult> UpdateUser(int id, User user)
         {
             if (id != user.Id)
             {
                 return BadRequest();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
             }
 
             _context.Entry(user).State = EntityState.Modified;
@@ -78,6 +92,7 @@ namespace Assignment3.Controllers
             return NoContent();
         }
 
+        // DELETE: api/User/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {

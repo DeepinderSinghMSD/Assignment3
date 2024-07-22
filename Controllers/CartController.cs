@@ -21,41 +21,54 @@ namespace Assignment3.Controllers
             _context = context;
         }
 
+        // GET: api/Cart
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Cart>>> GetCarts()
         {
-            return await _context.Carts.Include(c => c.CartProducts).ToListAsync();
+            return Ok(await _context.Carts.ToListAsync());
         }
 
+        // GET: api/Cart/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Cart>> GetCart(int id)
         {
-            var cart = await _context.Carts.Include(c => c.CartProducts)
-                                           .FirstOrDefaultAsync(c => c.Id == id);
+            var cart = await _context.Carts.FindAsync(id);
 
             if (cart == null)
             {
                 return NotFound();
             }
 
-            return cart;
+            return Ok(cart);
         }
 
+        // POST: api/Cart
         [HttpPost]
-        public async Task<ActionResult<Cart>> PostCart(Cart cart)
+        public async Task<ActionResult<Cart>> CreateCart(Cart cart)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             _context.Carts.Add(cart);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetCart), new { id = cart.Id }, cart);
         }
 
+        // PUT: api/Cart/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutCart(int id, Cart cart)
+        public async Task<IActionResult> UpdateCart(int id, Cart cart)
         {
             if (id != cart.Id)
             {
                 return BadRequest();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
             }
 
             _context.Entry(cart).State = EntityState.Modified;
@@ -79,6 +92,7 @@ namespace Assignment3.Controllers
             return NoContent();
         }
 
+        // DELETE: api/Cart/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCart(int id)
         {

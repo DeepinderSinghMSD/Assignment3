@@ -24,6 +24,7 @@ namespace Assignment3.Controllers
             _mapper = mapper;
         }
 
+        // getting all orders
         [HttpGet]
         public async Task<ActionResult<IEnumerable<OrderDtos>>> GetOrders()
         {
@@ -32,6 +33,8 @@ namespace Assignment3.Controllers
                 .ToListAsync();
             return Ok(_mapper.Map<IEnumerable<OrderDtos>>(orders));
         }
+
+        //getting single order
 
         [HttpGet("{id}")]
         public async Task<ActionResult<OrderDtos>> GetOrder(int id)
@@ -48,7 +51,7 @@ namespace Assignment3.Controllers
             return Ok(_mapper.Map<OrderDtos>(order));
         }
 
-
+        //creating new order
         [HttpPost]
         public async Task<ActionResult<OrderDtos>> CreateOrder([FromBody] OrderDtos orderDto)
         {
@@ -57,14 +60,14 @@ namespace Assignment3.Controllers
                 return BadRequest(ModelState);
             }
 
-            // Check if UserId exists
+            // Checking if UserId exists
             var userExists = await _context.Users.AnyAsync(u => u.Id == orderDto.UserId);
             if (!userExists)
             {
                 return BadRequest(new { Error = "Invalid UserId" });
             }
 
-            // Check if all ProductIds exist
+            // Checking if all ProductIds exist
             var invalidProducts = orderDto.OrderProducts.Where(op => !_context.Products.Any(p => p.Id == op.ProductId)).ToList();
             if (invalidProducts.Any())
             {
@@ -78,6 +81,7 @@ namespace Assignment3.Controllers
             return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, _mapper.Map<OrderDtos>(order));
         }
 
+        //updating order
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateOrder(int id, [FromBody] OrderDtos orderDto)
         {
@@ -131,7 +135,7 @@ namespace Assignment3.Controllers
             return NoContent();
         }
 
-
+        //deleting order
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteOrder(int id)
         {

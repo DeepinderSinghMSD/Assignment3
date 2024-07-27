@@ -21,14 +21,14 @@ namespace Assignment3.Controllers
             _context = context;
         }
 
-        // GET: api/Comment
+        // getting all comments
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Comment>>> GetComments()
         {
             return Ok(await _context.Comments.ToListAsync());
         }
 
-        // GET: api/Comment/5
+        // getting single comment 
         [HttpGet("{id}")]
         public async Task<ActionResult<Comment>> GetComment(int id)
         {
@@ -42,7 +42,7 @@ namespace Assignment3.Controllers
             return Ok(comment);
         }
 
-        // POST: api/Comment
+        // creating comment 
         [HttpPost]
         public async Task<IActionResult> CreateComment([FromBody] CommentDto commentDto)
         {
@@ -66,7 +66,7 @@ namespace Assignment3.Controllers
             return CreatedAtAction(nameof(GetComment), new { id = comment.Id }, comment);
         }
 
-        // PUT: api/Comment/5
+        // updating comment
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateComment(int id, [FromBody] CommentDto commentDto)
         {
@@ -96,12 +96,12 @@ namespace Assignment3.Controllers
             }
             catch (Exception ex)
             {
-                // Log the exception (implement logging as per your setup)
+                
                 return StatusCode(500, new { message = "An error occurred while updating the comment.", error = ex.Message });
             }
         }
 
-        // DELETE: api/Comment/5
+        // deleting comment
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteComment(int id)
         {

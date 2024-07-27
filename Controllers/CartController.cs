@@ -24,14 +24,14 @@ namespace Assignment3.Controllers
             _context = context;
         }
 
-        // GET: api/Cart
+        // getting all cart items
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Cart>>> GetCarts()
         {
             return Ok(await _context.Carts.Include(c => c.CartProducts).ToListAsync());
         }
 
-        // GET: api/Cart/5
+        // getting single cart item
         [HttpGet("{id}")]
         public async Task<ActionResult<Cart>> GetCart(int id)
         {
@@ -45,7 +45,7 @@ namespace Assignment3.Controllers
             return Ok(cart);
         }
 
-        // POST: api/Cart
+        // Creating cart
         [HttpPost]
         public async Task<IActionResult> CreateCart([FromBody] CartDto cartDto)
         {
@@ -62,7 +62,7 @@ namespace Assignment3.Controllers
             return CreatedAtAction(nameof(GetCart), new { id = cart.Id }, cart);
         }
 
-        // PUT: api/Cart/5
+        // updating cart
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCart(int id, [FromBody] CartDto cartDto)
         {
@@ -105,7 +105,7 @@ namespace Assignment3.Controllers
             return Ok(cart);
         }
 
-        // DELETE: api/Cart/5
+        // deleting cart
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCart(int id)
         {

@@ -21,14 +21,14 @@ namespace Assignment3.Controllers
             _context = context;
         }
 
-        // GET: api/User
+        // getting all users
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
             return Ok(await _context.Users.ToListAsync());
         }
 
-        // GET: api/User/5
+        // getting single user
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> GetUser(int id)
         {
@@ -42,7 +42,7 @@ namespace Assignment3.Controllers
             return Ok(user);
         }
 
-        // POST: api/User
+        // creating new user
         [HttpPost]
         [HttpPost]
         public async Task<ActionResult<User>> CreateUser(User user)
@@ -64,7 +64,7 @@ namespace Assignment3.Controllers
         }
 
 
-        // PUT: api/User/5
+        // updating user
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(int id, User user)
         {
@@ -105,7 +105,7 @@ namespace Assignment3.Controllers
         }
 
 
-        // DELETE: api/User/5
+        // deleting user
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {

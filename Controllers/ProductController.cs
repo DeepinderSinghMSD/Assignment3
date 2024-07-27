@@ -21,14 +21,14 @@ namespace Assignment3.Controllers
             _context = context;
         }
 
-        // GET: api/Product
+        // getting all products
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
         {
             return Ok(await _context.Products.ToListAsync());
         }
 
-        // GET: api/Product/5
+        // getting single product
         [HttpGet("{id}")]
         public async Task<ActionResult<Product>> GetProduct(int id)
         {
@@ -42,7 +42,7 @@ namespace Assignment3.Controllers
             return Ok(product);
         }
 
-        // POST: api/Product
+        // creating new product
         [HttpPost]
         public async Task<ActionResult<Product>> CreateProduct(Product product)
         {
@@ -57,7 +57,7 @@ namespace Assignment3.Controllers
             return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
         }
 
-        // PUT: api/Product/5
+        // updating product
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateProduct(int id, [FromBody] Product product)
         {
@@ -83,7 +83,7 @@ namespace Assignment3.Controllers
             return NoContent();
         }
 
-        // DELETE: api/Product/5
+        // deleting product
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(int id)
         {

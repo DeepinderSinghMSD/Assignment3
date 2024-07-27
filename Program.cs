@@ -7,14 +7,14 @@ using Assignment3;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-// Add services to the container.
+
 builder.Services.AddControllersWithViews();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        // Configure JSON serializer options here
-        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve; // Handle cycles
-        options.JsonSerializerOptions.MaxDepth = 64; // Increase depth if needed
+       
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve; 
+        options.JsonSerializerOptions.MaxDepth = 64; 
     });
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>

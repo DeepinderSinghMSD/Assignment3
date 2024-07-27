@@ -36,7 +36,7 @@ namespace Assignment3.Controllers
 
             if (product == null)
             {
-                return NotFound();
+                return NotFound(new { error = "product not found." }); 
             }
 
             return Ok(product);
@@ -69,7 +69,7 @@ namespace Assignment3.Controllers
             var existingProduct = await _context.Products.FindAsync(id);
             if (existingProduct == null)
             {
-                return NotFound();
+                return NotFound(new { error = "product not found." });
             }
 
             existingProduct.Description = product.Description;
@@ -90,7 +90,7 @@ namespace Assignment3.Controllers
             var product = await _context.Products.FindAsync(id);
             if (product == null)
             {
-                return NotFound();
+                return NotFound(new { error = "product not found." });
             }
 
             _context.Products.Remove(product);

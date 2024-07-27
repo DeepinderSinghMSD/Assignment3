@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Assignment3.Data;
 using Assignment3.Models;
+using AutoMapper;
 
 namespace Assignment3.Controllers
 {
@@ -15,9 +16,11 @@ namespace Assignment3.Controllers
     public class CartController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
-        public CartController(ApplicationDbContext context)
+        public CartController(ApplicationDbContext context, IMapper mapper)
         {
+            _mapper = mapper;
             _context = context;
         }
 
@@ -25,18 +28,18 @@ namespace Assignment3.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Cart>>> GetCarts()
         {
-            return Ok(await _context.Carts.ToListAsync());
+            return Ok(await _context.Carts.Include(c => c.CartProducts).ToListAsync());
         }
 
         // GET: api/Cart/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Cart>> GetCart(int id)
         {
-            var cart = await _context.Carts.FindAsync(id);
+            var cart = await _context.Carts.Include(c => c.CartProducts).FirstOrDefaultAsync(c => c.Id == id);
 
             if (cart == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Cart not found." });
             }
 
             return Ok(cart);
@@ -44,12 +47,14 @@ namespace Assignment3.Controllers
 
         // POST: api/Cart
         [HttpPost]
-        public async Task<ActionResult<Cart>> CreateCart(Cart cart)
+        public async Task<IActionResult> CreateCart([FromBody] CartDto cartDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
+
+            var cart = _mapper.Map<Cart>(cartDto);
 
             _context.Carts.Add(cart);
             await _context.SaveChangesAsync();
@@ -59,17 +64,25 @@ namespace Assignment3.Controllers
 
         // PUT: api/Cart/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateCart(int id, Cart cart)
+        public async Task<IActionResult> UpdateCart(int id, [FromBody] CartDto cartDto)
         {
-            if (id != cart.Id)
-            {
-                return BadRequest();
-            }
-
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
+
+            var cart = await _context.Carts.Include(c => c.CartProducts).FirstOrDefaultAsync(c => c.Id == id);
+            if (cart == null)
+            {
+                return NotFound(new { message = "Cart not found." });
+            }
+
+            cart.UserId = cartDto.UserId;
+            cart.CartProducts = cartDto.CartProducts.Select(cp => new CartProduct
+            {
+                ProductId = cp.ProductId,
+                Quantity = cp.Quantity
+            }).ToList();
 
             _context.Entry(cart).State = EntityState.Modified;
 
@@ -89,7 +102,7 @@ namespace Assignment3.Controllers
                 }
             }
 
-            return NoContent();
+            return Ok(cart);
         }
 
         // DELETE: api/Cart/5
@@ -99,7 +112,7 @@ namespace Assignment3.Controllers
             var cart = await _context.Carts.FindAsync(id);
             if (cart == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Cart not found." });
             }
 
             _context.Carts.Remove(cart);

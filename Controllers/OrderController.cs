@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Assignment3.Data;
 using Assignment3.Models;
+using AutoMapper;
 
 namespace Assignment3.Controllers
 {
@@ -15,53 +16,57 @@ namespace Assignment3.Controllers
     public class OrderController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
-        public OrderController(ApplicationDbContext context)
+        public OrderController(ApplicationDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
-        // GET: api/Order
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Order>>> GetOrders()
+        public async Task<ActionResult<IEnumerable<OrderDtos>>> GetOrders()
         {
-            return Ok(await _context.Orders.ToListAsync());
+            var orders = await _context.Orders
+                .Include(o => o.OrderProducts)
+                .ToListAsync();
+            return Ok(_mapper.Map<IEnumerable<OrderDtos>>(orders));
         }
 
-        // GET: api/Order/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Order>> GetOrder(int id)
+        public async Task<ActionResult<OrderDtos>> GetOrder(int id)
         {
-            var order = await _context.Orders.FindAsync(id);
+            var order = await _context.Orders
+                .Include(o => o.OrderProducts)
+                .FirstOrDefaultAsync(o => o.Id == id);
 
             if (order == null)
             {
-                return NotFound();
+                return NotFound(new { error = "order not found." });
             }
 
-            return Ok(order);
+            return Ok(_mapper.Map<OrderDtos>(order));
         }
 
-        // POST: api/Order
         [HttpPost]
-        public async Task<ActionResult<Order>> CreateOrder(Order order)
+        public async Task<ActionResult<OrderDtos>> CreateOrder([FromBody] OrderDtos orderDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
+            var order = _mapper.Map<Order>(orderDto);
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, order);
+            return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, _mapper.Map<OrderDtos>(order));
         }
 
-        // PUT: api/Order/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateOrder(int id, Order order)
+        public async Task<IActionResult> UpdateOrder(int id, [FromBody] OrderDtos orderDto)
         {
-            if (id != order.Id)
+            if (id != orderDto.Id)
             {
                 return BadRequest();
             }
@@ -71,6 +76,7 @@ namespace Assignment3.Controllers
                 return BadRequest(ModelState);
             }
 
+            var order = _mapper.Map<Order>(orderDto);
             _context.Entry(order).State = EntityState.Modified;
 
             try
@@ -92,14 +98,13 @@ namespace Assignment3.Controllers
             return NoContent();
         }
 
-        // DELETE: api/Order/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteOrder(int id)
         {
             var order = await _context.Orders.FindAsync(id);
             if (order == null)
             {
-                return NotFound();
+                return NotFound(new { error = "order not found." });
             }
 
             _context.Orders.Remove(order);

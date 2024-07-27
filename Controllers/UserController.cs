@@ -36,7 +36,7 @@ namespace Assignment3.Controllers
 
             if (user == null)
             {
-                return NotFound();
+                return NotFound(new { error = "User not found." });
             }
 
             return Ok(user);
@@ -44,10 +44,16 @@ namespace Assignment3.Controllers
 
         // POST: api/User
         [HttpPost]
+        [HttpPost]
         public async Task<ActionResult<User>> CreateUser(User user)
         {
             if (!ModelState.IsValid)
             {
+                var errors = ModelState.Values.SelectMany(v => v.Errors);
+                foreach (var error in errors)
+                {
+                    Console.WriteLine(error.ErrorMessage);
+                }
                 return BadRequest(ModelState);
             }
 
@@ -56,6 +62,7 @@ namespace Assignment3.Controllers
 
             return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
         }
+
 
         // PUT: api/User/5
         [HttpPut("{id}")]
@@ -68,6 +75,11 @@ namespace Assignment3.Controllers
 
             if (!ModelState.IsValid)
             {
+                var errors = ModelState.Values.SelectMany(v => v.Errors);
+                foreach (var error in errors)
+                {
+                    Console.WriteLine(error.ErrorMessage);
+                }
                 return BadRequest(ModelState);
             }
 
@@ -92,6 +104,7 @@ namespace Assignment3.Controllers
             return NoContent();
         }
 
+
         // DELETE: api/User/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
@@ -99,7 +112,7 @@ namespace Assignment3.Controllers
             var user = await _context.Users.FindAsync(id);
             if (user == null)
             {
-                return NotFound();
+                return NotFound(new { error = "User not found." });
             }
 
             _context.Users.Remove(user);

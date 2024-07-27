@@ -36,7 +36,7 @@ namespace Assignment3.Controllers
 
             if (comment == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Comment not found." });
             }
 
             return Ok(comment);
@@ -44,12 +44,21 @@ namespace Assignment3.Controllers
 
         // POST: api/Comment
         [HttpPost]
-        public async Task<ActionResult<Comment>> CreateComment(Comment comment)
+        public async Task<IActionResult> CreateComment([FromBody] CommentDto commentDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
+
+            var comment = new Comment
+            {
+                UserId = commentDto.UserId,
+                ProductId = commentDto.ProductId,
+                Rating = commentDto.Rating,
+                Images = commentDto.Images,
+                Text = commentDto.Text
+            };
 
             _context.Comments.Add(comment);
             await _context.SaveChangesAsync();
@@ -59,37 +68,37 @@ namespace Assignment3.Controllers
 
         // PUT: api/Comment/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateComment(int id, Comment comment)
+        public async Task<IActionResult> UpdateComment(int id, [FromBody] CommentDto commentDto)
         {
-            if (id != comment.Id)
-            {
-                return BadRequest();
-            }
-
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new ValidationProblemDetails(ModelState));
             }
-
-            _context.Entry(comment).State = EntityState.Modified;
 
             try
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!CommentExists(id))
+                var comment = await _context.Comments.FindAsync(id);
+                if (comment == null)
                 {
-                    return NotFound();
+                    return NotFound(new { message = "Comment not found." });
                 }
-                else
-                {
-                    throw;
-                }
-            }
 
-            return NoContent();
+                comment.ProductId = commentDto.ProductId;
+                comment.UserId = commentDto.UserId;
+                comment.Rating = commentDto.Rating;
+                comment.Images = commentDto.Images;
+                comment.Text = commentDto.Text;
+
+                _context.Comments.Update(comment);
+                await _context.SaveChangesAsync();
+
+                return Ok(comment);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (implement logging as per your setup)
+                return StatusCode(500, new { message = "An error occurred while updating the comment.", error = ex.Message });
+            }
         }
 
         // DELETE: api/Comment/5
@@ -99,7 +108,7 @@ namespace Assignment3.Controllers
             var comment = await _context.Comments.FindAsync(id);
             if (comment == null)
             {
-                return NotFound();
+                return NotFound(new { error = "Comment not found." });
             }
 
             _context.Comments.Remove(comment);

@@ -14,15 +14,15 @@ namespace Assignment3.Models
         public string Password { get; set; }
 
         [Required]
-        [StringLength(50, ErrorMessage = "Username cannot exceed 50 characters.")]
+        [StringLength(50, ErrorMessage = "Username must not exceed 50 characters.")]
         public string Username { get; set; }
 
         public string? PurchaseHistory { get; set; }
 
-        public string? ShippingAddress { get; set; }
+        public string ShippingAddress { get; set; }
 
-        public ICollection<Cart> Carts { get; set; }
-        public ICollection<Comment> Comments { get; set; }
-        public ICollection<Order> Orders { get; set; }
+        public ICollection<Cart>? Carts { get; set; }
+        public ICollection<Comment>? Comments { get; set; }
+        public ICollection<Order>? Orders { get; set; }
     }
 }

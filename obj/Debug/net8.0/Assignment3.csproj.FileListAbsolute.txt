@@ -6,6 +6,8 @@ C:\web technologies\Assignment3\bin\Debug\net8.0\Assignment3.deps.json
 C:\web technologies\Assignment3\bin\Debug\net8.0\Assignment3.runtimeconfig.json
 C:\web technologies\Assignment3\bin\Debug\net8.0\Assignment3.dll
 C:\web technologies\Assignment3\bin\Debug\net8.0\Assignment3.pdb
+C:\web technologies\Assignment3\bin\Debug\net8.0\AutoMapper.dll
+C:\web technologies\Assignment3\bin\Debug\net8.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll
 C:\web technologies\Assignment3\bin\Debug\net8.0\Humanizer.dll
 C:\web technologies\Assignment3\bin\Debug\net8.0\Microsoft.AspNetCore.Razor.Language.dll
 C:\web technologies\Assignment3\bin\Debug\net8.0\Microsoft.Bcl.AsyncInterfaces.dll

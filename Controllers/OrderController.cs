@@ -42,11 +42,12 @@ namespace Assignment3.Controllers
 
             if (order == null)
             {
-                return NotFound(new { error = "order not found." });
+                return NotFound(new { message = "order not found." });
             }
 
             return Ok(_mapper.Map<OrderDtos>(order));
         }
+
 
         [HttpPost]
         public async Task<ActionResult<OrderDtos>> CreateOrder([FromBody] OrderDtos orderDto)
@@ -54,6 +55,20 @@ namespace Assignment3.Controllers
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
+            }
+
+            // Check if UserId exists
+            var userExists = await _context.Users.AnyAsync(u => u.Id == orderDto.UserId);
+            if (!userExists)
+            {
+                return BadRequest(new { Error = "Invalid UserId" });
+            }
+
+            // Check if all ProductIds exist
+            var invalidProducts = orderDto.OrderProducts.Where(op => !_context.Products.Any(p => p.Id == op.ProductId)).ToList();
+            if (invalidProducts.Any())
+            {
+                return BadRequest(new { Error = "Invalid ProductId(s)", Products = invalidProducts });
             }
 
             var order = _mapper.Map<Order>(orderDto);
@@ -68,7 +83,7 @@ namespace Assignment3.Controllers
         {
             if (id != orderDto.Id)
             {
-                return BadRequest();
+                return BadRequest(new { message = "Order ID mismatch." });
             }
 
             if (!ModelState.IsValid)
@@ -76,8 +91,26 @@ namespace Assignment3.Controllers
                 return BadRequest(ModelState);
             }
 
-            var order = _mapper.Map<Order>(orderDto);
-            _context.Entry(order).State = EntityState.Modified;
+            var order = await _context.Orders.Include(o => o.OrderProducts).FirstOrDefaultAsync(o => o.Id == id);
+
+            if (order == null)
+            {
+                return NotFound(new { message = "Order not found." });
+            }
+
+            var userExists = await _context.Users.AnyAsync(u => u.Id == orderDto.UserId);
+            if (!userExists)
+            {
+                return BadRequest(new { Error = "Invalid UserId" });
+            }
+
+            var invalidProducts = orderDto.OrderProducts.Where(op => !_context.Products.Any(p => p.Id == op.ProductId)).ToList();
+            if (invalidProducts.Any())
+            {
+                return BadRequest(new { Error = "Invalid ProductId(s)", Products = invalidProducts });
+            }
+
+            _mapper.Map(orderDto, order);
 
             try
             {
@@ -87,7 +120,7 @@ namespace Assignment3.Controllers
             {
                 if (!OrderExists(id))
                 {
-                    return NotFound();
+                    return NotFound(new { message = "Order not found." });
                 }
                 else
                 {
@@ -98,13 +131,14 @@ namespace Assignment3.Controllers
             return NoContent();
         }
 
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteOrder(int id)
         {
             var order = await _context.Orders.FindAsync(id);
             if (order == null)
             {
-                return NotFound(new { error = "order not found." });
+                return NotFound(new { message = "order not found." });
             }
 
             _context.Orders.Remove(order);

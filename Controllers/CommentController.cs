@@ -108,7 +108,7 @@ namespace Assignment3.Controllers
             var comment = await _context.Comments.FindAsync(id);
             if (comment == null)
             {
-                return NotFound(new { error = "Comment not found." });
+                return NotFound(new { error = "comment not found." });
             }
 
             _context.Comments.Remove(comment);
